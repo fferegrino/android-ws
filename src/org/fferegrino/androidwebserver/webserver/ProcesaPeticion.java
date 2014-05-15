@@ -21,7 +21,6 @@ public class ProcesaPeticion {
 			contenedor = new File(sdCard.getAbsolutePath()
 					+ "/AndroidWebServer/wwwroot");
 			boolean x = contenedor.mkdirs();
-if(x);
 			File request = new File(contenedor.getAbsolutePath() + path);
 
 			StringBuilder strLine = new StringBuilder();
