@@ -31,6 +31,8 @@ public void run() {
 				outputStream), true);
 		out.flush();
 
+		HTTPHeader header = new HTTPHeader(scliente.getInputStream());
+		header.parse();
 		String cadena = "";
 		int i = 0;
 		ProcesaPeticion pp = null;

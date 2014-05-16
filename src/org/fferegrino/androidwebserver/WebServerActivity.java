@@ -42,6 +42,11 @@ public class WebServerActivity extends Activity {
 		logView(message, 0);
 	}
 
+	/**
+	 * Prints a message on the screen, it is colored based on its level.
+	 * @param message The message to be printed
+	 * @param level Level of the message
+	 */
 	public void logView(String message, int level) {
 		String sColor;
 		switch (level) {
@@ -58,8 +63,8 @@ public class WebServerActivity extends Activity {
 			sColor = "black";
 			break;
 		}
-		ETLog.append(Html.fromHtml("<font color='" + sColor + "'>" + message
-				+ "</font><br />"));
+		
+		ETLog.append(Html.fromHtml(String.format(getString(R.string.logMessage), sColor, message)));
 		
 	}
 
