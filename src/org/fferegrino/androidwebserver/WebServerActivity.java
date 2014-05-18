@@ -1,5 +1,6 @@
 package org.fferegrino.androidwebserver;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,6 +17,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.text.Html;
@@ -44,8 +46,11 @@ public class WebServerActivity extends Activity {
 
 	/**
 	 * Prints a message on the screen, it is colored based on its level.
-	 * @param message The message to be printed
-	 * @param level Level of the message
+	 * 
+	 * @param message
+	 *            The message to be printed
+	 * @param level
+	 *            Level of the message
 	 */
 	public void logView(String message, int level) {
 		String sColor;
@@ -63,9 +68,10 @@ public class WebServerActivity extends Activity {
 			sColor = "black";
 			break;
 		}
-		
-		ETLog.append(Html.fromHtml(String.format(getString(R.string.logMessage), sColor, message)));
-		
+
+		ETLog.append(Html.fromHtml(String.format(
+				getString(R.string.logMessage), sColor, message)));
+
 	}
 
 	public String getDeviceInfo() {
@@ -73,24 +79,27 @@ public class WebServerActivity extends Activity {
 		String model = Build.MODEL;
 		return capitalize(manufacturer) + " " + model;
 	}
-	
-	public String getSystemInfo(){
-		
+
+	public String getSystemInfo() {
+
 		int sdkInt = VERSION.SDK_INT;
-		int versionNumber = 0; 
+		int versionNumber = 0;
 		String versionName = null;
 		try {
-			PackageInfo pinfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			PackageInfo pinfo = getPackageManager().getPackageInfo(
+					getPackageName(), 0);
 			versionNumber = pinfo.versionCode;
 			versionName = pinfo.versionName;
 		} catch (NameNotFoundException e) {
 		}
-		return "Version : " + VERSION.CODENAME + " / SDK: " +sdkInt + " / " + VERSION.RELEASE + " -- AndroidWebServer " + versionNumber + " " + versionName;
+		return "Version : " + VERSION.CODENAME + " / SDK: " + sdkInt + " / "
+				+ VERSION.RELEASE + " -- AndroidWebServer " + versionNumber
+				+ " " + versionName;
 	}
 
 	private String capitalize(String s) {
 		if (s == null || s.length() == 0) {
-			return "";  
+			return "";
 		}
 		char first = s.charAt(0);
 		if (Character.isUpperCase(first)) {
@@ -117,7 +126,6 @@ public class WebServerActivity extends Activity {
 		logView(getSystemInfo());
 		bTurnOff.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
-			
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView,
 					boolean isChecked) {
@@ -147,10 +155,22 @@ public class WebServerActivity extends Activity {
 	public void listening(boolean isListening) {
 		if (isListening) {
 			if (isConnectedWIFI()) {
-				puerto = 8085;
+				puerto = 80;
 				logView("Encendiendo servidor", 3);
 				servidorWeb = new ServidorWeb();
 				servidorWeb.execute(this);
+
+				// Create folder
+				String state = Environment.getExternalStorageState();
+				if (Environment.MEDIA_MOUNTED.equals(state)) {
+					File sdCard = Environment.getExternalStorageDirectory(), contenedor;
+					contenedor = new File(sdCard.getAbsolutePath()
+							+ "/AndroidWebServer/wwwroot");
+					if (!contenedor.exists()) {
+						contenedor.mkdirs();
+					}
+				}
+
 			} else {
 				bTurnOff.setChecked(false);
 				pullToast("No estás conectado a una red WiFi");
@@ -170,27 +190,26 @@ public class WebServerActivity extends Activity {
 		}
 	}
 
-	public class ServidorWeb 
-		extends AsyncTask<WebServerActivity, String, Void> {
+	public class ServidorWeb extends AsyncTask<WebServerActivity, String, Void> {
 		boolean setIp;
 		ServerSocket ss;
 		String sIPAddress;
-		
-		public String getIpAddr(){
+
+		public String getIpAddr() {
 			return this.sIPAddress;
 		}
 
 		public void closeSocket() throws IOException, NullPointerException {
 			ss.close();
 		}
-		
-		public String getSysInfo(){
+
+		public String getSysInfo() {
 			return getSystemInfo();
 		}
 
 		@Override
 		protected Void doInBackground(WebServerActivity... arg0) {
-			
+
 			WifiManager manager = (WifiManager) getBaseContext()
 					.getSystemService(Context.WIFI_SERVICE);
 			WifiInfo wifiInfo = manager.getConnectionInfo();
