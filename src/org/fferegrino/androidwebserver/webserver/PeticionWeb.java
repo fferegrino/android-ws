@@ -54,8 +54,9 @@ public class PeticionWeb extends Thread {
 			bos.flush();
 
 			if (response.getStatusCode() == 200) {
-				FileInputStream fr = new FileInputStream(files.getFile(header
-						.getFile()));
+				String f = header.getFile().equals("") ? ServerFiles.INDEX
+						: header.getFile();
+				FileInputStream fr = new FileInputStream(files.getFile(f));
 				wrote = fr.read(buffer);
 				while (wrote != -1) {
 					bos.write(buffer, 0, wrote);

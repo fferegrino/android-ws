@@ -95,7 +95,7 @@ public class HTTPHeader {
 			char[] data = new char[mxRead];
 			br.read(data, 0, mxRead);
 			fullParams = new String(data);
-		} else if (METHOD_POST.equals(method)) {
+		} else if (METHOD_HEAD.equals(method)) {
 			printBody = false;
 		}
 		if (fullParams != null) {

@@ -1,28 +1,19 @@
 package org.fferegrino.androidwebserver;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import org.fferegrino.androidwebserver.system.AndroidSystem;
+import org.fferegrino.androidwebserver.system.ServerFiles;
 import org.fferegrino.androidwebserver.webserver.PeticionWeb;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Environment;
-import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
@@ -35,7 +26,7 @@ public class WebServerActivity extends Activity {
 	ToggleButton bTurnOff;
 	private int puerto;
 	ServidorWeb servidorWeb;
-	
+
 	AndroidSystem sys;
 
 	public int getPuerto() {
@@ -44,6 +35,10 @@ public class WebServerActivity extends Activity {
 
 	public void logView(String message) {
 		logView(message, 0);
+	}
+
+	public void logView(CharSequence message, int level) {
+		logView(message.toString(), level);
 	}
 
 	/**
@@ -82,9 +77,10 @@ public class WebServerActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		sys = new AndroidSystem();
+		sys = new AndroidSystem(this);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_web_server);
+		puerto = 8080;
 		myIp = (TextView) findViewById(R.id.myIp);
 		ETLog = (TextView) findViewById(R.id.ETLog);
 		bTurnOff = (ToggleButton) findViewById(R.id.bTurnOff);
@@ -111,34 +107,45 @@ public class WebServerActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-	    //Alternativa 1
-	    getMenuInflater().inflate(R.menu.menu, menu);
-	    return true;
+		getMenuInflater().inflate(R.menu.menu, menu);
+		return true;
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.optCreateRoot:
+			if (!ServerFiles.rootExists()) {
+				ServerFiles.createRoot();
+			}
+			return true;
+		case R.id.optCreateIndex:
+			ServerFiles.writeIndex(sys, getString(R.string.index_html));
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	
+	protected void pullToast(CharSequence message){
+		pullToast(message.toString());
+	}
 	protected void pullToast(String message) {
-		Toast.makeText(getBaseContext(), message, Toast.LENGTH_SHORT).show();
+		Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
 	}
 
 	public void listening(boolean isListening) {
 		if (isListening) {
 			if (sys.isConnectedWIFI()) {
-				puerto = 8080;
-				logView("Encendiendo servidor", 3);
-				servidorWeb = new ServidorWeb();
-				servidorWeb.execute(this);
-
-				// Create folder
-				String state = Environment.getExternalStorageState();
-				if (Environment.MEDIA_MOUNTED.equals(state)) {
-					File sdCard = Environment.getExternalStorageDirectory(), contenedor;
-					contenedor = new File(sdCard.getAbsolutePath()
-							+ "/AndroidWebServer/wwwroot");
-					if (!contenedor.exists()) {
-						contenedor.mkdirs();
-					}
+				logView(getString(R.string.turningOn), 3);
+				if (ServerFiles.rootExists()) {
+					servidorWeb = new ServidorWeb();
+					servidorWeb.execute(this);
+				} else {
+					pullToast("No no existe la carpeta del servidor");
+					bTurnOff.setChecked(false);
 				}
-
 			} else {
 				bTurnOff.setChecked(false);
 				pullToast("No estás conectado a una red WiFi");
@@ -174,10 +181,7 @@ public class WebServerActivity extends Activity {
 		@Override
 		protected Void doInBackground(WebServerActivity... arg0) {
 
-			WifiManager manager = (WifiManager) getBaseContext()
-					.getSystemService(Context.WIFI_SERVICE);
-			WifiInfo wifiInfo = manager.getConnectionInfo();
-			int ip = wifiInfo.getIpAddress();
+			int ip = sys.getWifiInfo().getIpAddress();
 			sIPAddress = String.format(getText(R.string.ip) + " %d.%d.%d.%d:"
 					+ puerto, (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff),
 					(ip >> 24 & 0xff));
@@ -185,19 +189,21 @@ public class WebServerActivity extends Activity {
 			publishProgress(sIPAddress);
 			try {
 				ss = new ServerSocket(puerto);
-				publishProgress("Servidor encendido", "1");
+				publishProgress(getText(R.string.serverOn).toString(), "1");
 				while (!isCancelled()) {
 					Socket entrante = ss.accept();
-					publishProgress("Cliente aceptado: <b>"
-							+ entrante.getInetAddress().getHostName() + "</b>",
-							"1");
+
+					publishProgress(String.format(
+							getText(R.string.acceptedClient).toString(),
+							entrante.getInetAddress().getHostAddress(),
+							entrante.getPort()), "1");
 					PeticionWeb pw = new PeticionWeb(entrante, this);
 					pw.start();
 				}
 			} catch (Exception e) {
 				if (!isCancelled()) {
-					publishProgress("Error en servidor: <b>" + e.toString()
-							+ "</b>", "2");
+					publishProgress(String.format(getText(R.string.serverError)
+							.toString(), e.toString(), "2"));
 				}
 			}
 
