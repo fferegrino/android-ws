@@ -26,8 +26,12 @@ public class HTTPHeader {
 		this.method = method;
 	}
 
+	public String getExtension(){
+		return extension;
+	}
+	
 	public String getFile() {
-		return file;
+		return file.substring(1);
 	}
 
 	public void setFile(String file) {
@@ -48,6 +52,7 @@ public class HTTPHeader {
 
 	private String method;
 	private String file;
+	private String extension;
 	private boolean printBody;
 	private HashMap<String, String> parametros;
 
@@ -57,17 +62,23 @@ public class HTTPHeader {
 	}
 
 	void parse() throws IOException {
+		int qmark, dmark;
 		String s = br.readLine();
 		String[] fields = s.split(" ");
 		method = fields[0];
 		file = fields[1];
 		printBody = true;
-		int qmark = file.indexOf("?");
+		qmark = file.indexOf("?");
 		String fullParams = null;
 		if (qmark >= 0) {
 			fullParams = file.substring(qmark + 1);
 			file = file.substring(0, qmark);
 		}
+		dmark = file.lastIndexOf(".");
+		if (dmark >= 0) {
+			extension = file.substring(dmark);
+		}
+
 		if (METHOD_GET.equals(method)) {
 			// TODO: Algo
 		} else if (METHOD_POST.equals(method)) {

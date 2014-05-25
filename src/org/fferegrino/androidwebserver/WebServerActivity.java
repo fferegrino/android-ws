@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.fferegrino.androidwebserver.system.AndroidSystem;
 import org.fferegrino.androidwebserver.webserver.PeticionWeb;
 
 import android.app.Activity;
@@ -21,6 +22,7 @@ import android.os.Environment;
 import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.text.Html;
+import android.view.Menu;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
@@ -33,8 +35,8 @@ public class WebServerActivity extends Activity {
 	ToggleButton bTurnOff;
 	private int puerto;
 	ServidorWeb servidorWeb;
-
-	String systemInfo;
+	
+	AndroidSystem sys;
 
 	public int getPuerto() {
 		return puerto;
@@ -74,47 +76,13 @@ public class WebServerActivity extends Activity {
 
 	}
 
-	public String getDeviceInfo() {
-		String manufacturer = Build.MANUFACTURER;
-		String model = Build.MODEL;
-		return capitalize(manufacturer) + " " + model;
-	}
-
-	public String getSystemInfo() {
-
-		int sdkInt = VERSION.SDK_INT;
-		int versionNumber = 0;
-		String versionName = null;
-		try {
-			PackageInfo pinfo = getPackageManager().getPackageInfo(
-					getPackageName(), 0);
-			versionNumber = pinfo.versionCode;
-			versionName = pinfo.versionName;
-		} catch (NameNotFoundException e) {
-		}
-		return "Version : " + VERSION.CODENAME + " / SDK: " + sdkInt + " / "
-				+ VERSION.RELEASE + " -- AndroidWebServer " + versionNumber
-				+ " " + versionName;
-	}
-
-	private String capitalize(String s) {
-		if (s == null || s.length() == 0) {
-			return "";
-		}
-		char first = s.charAt(0);
-		if (Character.isUpperCase(first)) {
-			return s;
-		} else {
-			return Character.toUpperCase(first) + s.substring(1);
-		}
-	}
-
 	public void setTextIP(String sIPAddress) {
 		myIp.setText(sIPAddress);
 	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		sys = new AndroidSystem();
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_web_server);
 		myIp = (TextView) findViewById(R.id.myIp);
@@ -123,7 +91,7 @@ public class WebServerActivity extends Activity {
 
 		myIp.setText("El servidor está apagado");
 		bTurnOff.setChecked(false);
-		logView(getSystemInfo());
+		logView(sys.getSystemInfo());
 		bTurnOff.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 
 			@Override
@@ -141,11 +109,11 @@ public class WebServerActivity extends Activity {
 		listening(false);
 	}
 
-	protected boolean isConnectedWIFI() {
-		ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-		NetworkInfo mWifi = connManager
-				.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-		return mWifi.isConnected();
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    //Alternativa 1
+	    getMenuInflater().inflate(R.menu.menu, menu);
+	    return true;
 	}
 
 	protected void pullToast(String message) {
@@ -154,8 +122,8 @@ public class WebServerActivity extends Activity {
 
 	public void listening(boolean isListening) {
 		if (isListening) {
-			if (isConnectedWIFI()) {
-				puerto = 80;
+			if (sys.isConnectedWIFI()) {
+				puerto = 8080;
 				logView("Encendiendo servidor", 3);
 				servidorWeb = new ServidorWeb();
 				servidorWeb.execute(this);
@@ -201,10 +169,6 @@ public class WebServerActivity extends Activity {
 
 		public void closeSocket() throws IOException, NullPointerException {
 			ss.close();
-		}
-
-		public String getSysInfo() {
-			return getSystemInfo();
 		}
 
 		@Override
@@ -257,10 +221,6 @@ public class WebServerActivity extends Activity {
 
 		public void log(String... msg) {
 			publishProgress(msg);
-		}
-
-		public String getInfo() {
-			return getDeviceInfo();
 		}
 
 		@Override

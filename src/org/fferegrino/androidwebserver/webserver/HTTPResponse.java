@@ -3,12 +3,19 @@ package org.fferegrino.androidwebserver.webserver;
 import java.util.Date;
 import java.util.HashMap;
 
+import android.util.SparseArray;
+
 public class HTTPResponse {
-	static HashMap<Integer, String> statusStrings;
+	static SparseArray<String> statusStrings;
+	//static HashMap<Integer, String> statusStrings;
 	static HashMap<String, String> contentTypes;
 
 	public void setStatusCode(int statusCode) {
 		this.statusCode = statusCode;
+	}
+
+	public int getStatusCode() {
+		return this.statusCode;
 	}
 
 	public void setHttpVer(String httpVer) {
@@ -40,17 +47,19 @@ public class HTTPResponse {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
+		String contentT = contentTypes.containsKey(contentType) ? contentTypes
+				.get(contentType) : "text/html";
 		statusCode = statusCode == 0 ? 500 : statusCode;
 		sb.append(httpVer).append(" ").append(statusCode).append(" ");
 		sb.append(statusStrings.get(statusCode)).append("\n");
 		sb.append("Server: ").append(" ").append(server).append("\n");
 		sb.append("Date: ").append(" ").append(date).append("\n");
-		sb.append("Content-Type: text/html").append("\n");
+		sb.append("Content-Type: ").append(contentT).append("\n\n");
 		return sb.toString();
 	}
 
 	static {
-		statusStrings = new HashMap<Integer, String>();
+		statusStrings =  new SparseArray<String>();
 		statusStrings.put(200, "OK");
 		statusStrings.put(201, "CREATED");
 		statusStrings.put(202, "Accepted");
@@ -69,6 +78,7 @@ public class HTTPResponse {
 		contentTypes.put(".ico", "image/x-icon");
 		contentTypes.put(".mp3", "audio/mpeg3");
 		contentTypes.put(".doc", "application/msword");
+		contentTypes.put(".js", "text/javascript");
 		contentTypes.put(".docx", "application/msword");
 
 	}
