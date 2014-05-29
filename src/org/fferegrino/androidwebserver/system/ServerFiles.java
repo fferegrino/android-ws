@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.os.Environment;
-import android.content.Context;
 
 public class ServerFiles {
 	public final static String INDEX = "index.html";
@@ -59,8 +58,6 @@ public class ServerFiles {
 				fos.flush();
 				fos.close();
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} catch (IOException e) {
 
 			}

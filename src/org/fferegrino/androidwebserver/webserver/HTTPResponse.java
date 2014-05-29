@@ -7,7 +7,6 @@ import android.util.SparseArray;
 
 public class HTTPResponse {
 	static SparseArray<String> statusStrings;
-	//static HashMap<Integer, String> statusStrings;
 	static HashMap<String, String> contentTypes;
 
 	public void setStatusCode(int statusCode) {

@@ -37,10 +37,6 @@ public class WebServerActivity extends Activity {
 		logView(message, 0);
 	}
 
-	public void logView(CharSequence message, int level) {
-		logView(message.toString(), level);
-	}
-
 	/**
 	 * Prints a message on the screen, it is colored based on its level.
 	 * 
@@ -95,7 +91,6 @@ public class WebServerActivity extends Activity {
 					boolean isChecked) {
 				listening(isChecked);
 			}
-
 		});
 	}
 
@@ -127,10 +122,10 @@ public class WebServerActivity extends Activity {
 		}
 	}
 
-	
-	protected void pullToast(CharSequence message){
+	protected void pullToast(CharSequence message) {
 		pullToast(message.toString());
 	}
+
 	protected void pullToast(String message) {
 		Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
 	}
@@ -143,28 +138,31 @@ public class WebServerActivity extends Activity {
 					servidorWeb = new ServidorWeb();
 					servidorWeb.execute(this);
 				} else {
-					pullToast("No no existe la carpeta del servidor");
+					pullToast(getString(R.string.serverErrorNoRoot));
 					bTurnOff.setChecked(false);
 				}
 			} else {
 				bTurnOff.setChecked(false);
-				pullToast("No estás conectado a una red WiFi");
+				pullToast(getString(R.string.serverErrorNoWiFi));
 			}
 		} else {
 			try {
-				logView("Apagando servidor", 3);
+				logView(getString(R.string.turningOff), 3);
 				servidorWeb.cancel(true);
 				servidorWeb.closeSocket();
 			} catch (IOException e) {
-				logView("Error apagando el servidor: <b>" + e.toString()
-						+ "</b>", 2);
-			} catch (NullPointerException e) {
-				logView("Error apagando el servidor: <b>" + e.toString()
-						+ "</b>", 2);
+				logView(String
+						.format(getString(R.string.serverErrorTurningOff),
+								e.toString()));
 			}
 		}
 	}
 
+	/**
+	 * Inner class
+	 * 
+	 * @author Antonio
+	 */
 	public class ServidorWeb extends AsyncTask<WebServerActivity, String, Void> {
 		boolean setIp;
 		ServerSocket ss;
@@ -182,19 +180,19 @@ public class WebServerActivity extends Activity {
 		protected Void doInBackground(WebServerActivity... arg0) {
 
 			int ip = sys.getWifiInfo().getIpAddress();
-			sIPAddress = String.format(getText(R.string.ip) + " %d.%d.%d.%d:"
-					+ puerto, (ip & 0xff), (ip >> 8 & 0xff), (ip >> 16 & 0xff),
-					(ip >> 24 & 0xff));
+			sIPAddress = String.format("%d.%d.%d.%d:%d", (ip & 0xff),
+					(ip >> 8 & 0xff), (ip >> 16 & 0xff), (ip >> 24 & 0xff),
+					puerto);
 			setIp = true;
 			publishProgress(sIPAddress);
 			try {
 				ss = new ServerSocket(puerto);
-				publishProgress(getText(R.string.serverOn).toString(), "1");
+				publishProgress(getString(R.string.serverOn), "1");
 				while (!isCancelled()) {
 					Socket entrante = ss.accept();
 
 					publishProgress(String.format(
-							getText(R.string.acceptedClient).toString(),
+							getString(R.string.acceptedClient),
 							entrante.getInetAddress().getHostAddress(),
 							entrante.getPort()), "1");
 					PeticionWeb pw = new PeticionWeb(entrante, this);
@@ -202,11 +200,9 @@ public class WebServerActivity extends Activity {
 				}
 			} catch (Exception e) {
 				if (!isCancelled()) {
-					publishProgress(String.format(getText(R.string.serverError)
-							.toString(), e.toString(), "2"));
+					publishProgress(String.format(getString(R.string.serverError), e.toString(), "2"));
 				}
 			}
-
 			return null;
 		}
 
@@ -241,10 +237,7 @@ public class WebServerActivity extends Activity {
 				} else {
 					logView((values[0]));
 				}
-
 			}
 		}
-
 	}
-
 }

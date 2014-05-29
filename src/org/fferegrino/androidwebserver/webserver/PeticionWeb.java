@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.HashMap;
 
 import org.fferegrino.androidwebserver.WebServerActivity.ServidorWeb;
 import org.fferegrino.androidwebserver.system.ServerFiles;
@@ -45,6 +46,15 @@ public class PeticionWeb extends Thread {
 				} else {
 					response.setStatusCode(200);
 					web.log("File " + header.getFile());
+
+					HashMap<String, String> parametros = header.getParametros();
+					if(parametros.size() > 0){
+						web.log("Parámetros:");
+					for (String s : parametros.keySet()) {
+						web.log(s + " : " + parametros.get(s));
+					}
+					}
+
 				}
 			} else {
 				response.setStatusCode(500);
